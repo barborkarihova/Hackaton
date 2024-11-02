@@ -581,6 +581,7 @@ def detect_concurrent_boluses_daily(data, tolerance=15/60,return_categories=Fals
 
 
 def plot_wrong_boluses(data):
+    data = categorize_time_of_day(data, 'Timestamp')
     result = detect_concurrent_boluses_daily(data, return_categories=True)
                 
     # Create a DataFrame from the list
