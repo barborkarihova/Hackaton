@@ -8,6 +8,7 @@ import pandas as pd
 import pyglc
 import altair as alt
 import datetime
+import matplotlib.pyplot as plt
 
 st.set_page_config(
     page_title="PerFEKTPump",
