@@ -33,7 +33,7 @@ if 'selected_date' not in st.session_state:
     st.session_state.selected_date = datetime.date(2024,7,5) #None           # datetime.date(2024, 6, 19)
 
 
-def categorize_time_of_day(df, timestamp_column):
+def categorize_time_of_day(df, timestamp_column='Timestamp'):
     # Ensure the timestamp column is in datetime format
     df[timestamp_column] = pd.to_datetime(df[timestamp_column])
     
@@ -136,7 +136,15 @@ if st.session_state.df_final_exists:
    
         with col[1]:
             st.subheader("Statistika chyb pacienta")
-            histogram = pyglc.plot_wrong_boluses(st.session_state.df_final)
+            st.caption("**Injekce bolusu po jídle - po nástupu hyperglykémie**")
+            data = categorize_time_of_day(st.session_state.df_final, 'Timestamp')
+            result = pyglc.detect_concurrent_boluses_daily(data, return_categories=True)
+            histogram = pyglc.plot_wrong_boluses(result)
+            st.altair_chart(histogram, use_container_width=True)
+
+            st.caption("**Injekce bolusu max. 2h před nástupem hypoglykémie**")
+            result = pyglc.hypoglycemia_after_bolus_detection(data)
+            histogram = pyglc.plot_wrong_boluses(result)
             st.altair_chart(histogram, use_container_width=True)
         
             st.subheader("Procentuální rozložení bazálního a bolusového inzulínu")

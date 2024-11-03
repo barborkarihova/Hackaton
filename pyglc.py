@@ -252,7 +252,6 @@ def process_data(basal_df, bolus_df, glc_df):
 def plot_mean(df, column):
     df['Timestamp'] = pd.to_datetime(df['Timestamp'])
     df['MinutesOfDay'] = df['Timestamp'].dt.hour * 60 + df['Timestamp'].dt.minute
-    
     grouped = df.groupby(df['MinutesOfDay'])[column].agg(
         mean='mean',
         p25=lambda x: x.quantile(0.25),
@@ -286,29 +285,30 @@ def plot_mean(df, column):
 
     rolling_stats['MinutesOfDay'] = rolling_stats['MinutesOfDay']/60
     # Plot mean glucose level with 25-75% and 10-90% intervals
-    sns.lineplot(data=rolling_stats, x='MinutesOfDay', y='Mean', label='Mean Basal_Rate', color='blue')
+    sns.lineplot(data=rolling_stats, x='MinutesOfDay', y='Mean', label='Průměr', color='blue')
     plt.fill_between(rolling_stats['MinutesOfDay'], rolling_stats['P25'], rolling_stats['P75'], color='blue', alpha=0.3, label='25-75%')
     plt.fill_between(rolling_stats['MinutesOfDay'], rolling_stats['P10'], rolling_stats['P90'], color='blue', alpha=0.1, label='10-90%')
     
 
     # Customize plot
     # plt.ylim(0, 24)
-    plt.xlabel('Time of Day (Hour)')
-    plt.ylabel(f'Mean {column}')
-    plt.title(f'Mean {column} Over Time of Day with 25-75% and 10-90% Intervals')
-    plt.legend()
+    plt.xlabel('t [Hodiny]', fontsize=14)
+    plt.ylabel(f'Průměr {column}', fontsize=14)
+    # plt.title(f'Mean {column} Over Time of Day with 25-75% and 10-90% Intervals')
+    plt.legend(loc='upper right', fontsize=12)
+    plt.xticks(np.arange(0, 25, 2))
+    plt.tick_params(axis='both', which='major', labelsize=13)
     # plt.show()
     return plt.gcf(), rolling_stats
 
 
-def categorize_time_of_day(df, timestamp_column):
+def categorize_time_of_day(df, timestamp_column='Timestamp'):
     # Ensure the timestamp column is in datetime format
     df[timestamp_column] = pd.to_datetime(df[timestamp_column])
-    
     # Create a new column for the category
-    df['time_category'] = df[timestamp_column].dt.hour // 2 + 1
-    
+    df['time_category'] = df[timestamp_column].dt.hour // 2 + 1    
     return df
+
 def calculate_mean_by_category(df, value_column):
     df['Timestamp'] = pd.to_datetime(df['Timestamp'])
     df['day'] = df['Timestamp'].dt.date
@@ -473,7 +473,7 @@ def plot_insulin_statistics(df_combined, first_category_name, second_category_na
                 legend=alt.Legend(orient='top')),
             ).properties(
                 width=600,
-                height=250
+                height=300
             )
             return(chart)
 
@@ -501,40 +501,87 @@ def plot_day(df, date):
     
     if wrong_boluses:
         for ax in [ax1, ax2, ax3]:
-            ax.axvline(x=wrong_boluses, color='grey', linestyle='--', linewidth=3)
+            ax.axvline(x=wrong_boluses, color='red', alpha=0.5, linestyle='--', linewidth=5)
     
     # Plot GLC
     ax1.plot(time, glc, color='blue', label='GLC')
     ax1.plot(time, boundaries[0], color='lime')
     ax1.plot(time, boundaries[1], color='lime', linestyle='--')
     ax1.plot(time, boundaries[2], color='lime')
-    ax1.set_ylabel('GLC')
-    ax1.legend(loc='upper left')
-    ax1.set_title('Glycemic Levels (GLC)')
+    ax1.set_ylabel('Glykémie (mmol/l)', fontsize=15)
+    ax1.legend(loc='upper left', fontsize=13)
+    ax1.tick_params(axis='y', labelsize=14)
+    # ax1.set_title('Glycemic Levels (GLC)')
     ax1.set_ylim(0, 23)
 
     # Plot Bolus
-    ax2.plot(time, bolus_aut, color='red', label='Bolus')
-    ax2.plot(time, bolus_man, color='orange', label='Manual Bolus')
-    ax2.set_ylabel('Bolus')
-    ax2.legend(loc='upper left')
-    ax2.set_title('Bolus Insulin')
+    ax2.plot(time, bolus_aut, color='red', label='Automatický bolus')
+    ax2.plot(time, bolus_man, color='orange', label='Manuální bolus')
+    ax2.set_ylabel('Bolus', fontsize=15)
+    ax2.legend(loc='upper left', fontsize=13)
+    ax2.tick_params(axis='y', labelsize=14)
+    # ax2.set_title('Bolus Insulin')
 
     # Plot Basal Rate
-    ax3.plot(time, basal, color='green', label='Basal Rate')
-    ax3.set_ylabel('Basal Rate')
-    ax3.legend(loc='upper left')
-    ax3.set_title('Basal Insulin Rate')
+    ax3.plot(time, basal, color='green', label='Bazální inzulin')
+    ax3.set_ylabel('Bazální dávka (U/min)', fontsize=15)
+    ax3.legend(loc='upper left', fontsize=13)
+    ax3.tick_params(axis='y', labelsize=14)
+    # ax3.set_title('Basal Insulin Rate')
 
     # Customize the x-axis
-    plt.xlabel('Time of Day')
+    plt.xlabel('t [Hodiny]', fontsize=15)
     
     # Adjust layout for better spacing
     plt.tight_layout()
-    
+    plt.xticks(np.arange(0, 25, 2))
+    plt.tick_params(axis='x', labelsize=14)
+    plt.tick_params(axis='y', labelsize=14)
     # Show the plots
     # plt.show()
     return plt.gcf()
+
+def detect_concurrent_boluses_daily(data, tolerance=15/60):
+    data = data.reset_index(drop=True)
+    concurrent_timestamps = []
+    timestamps = pd.to_datetime(data['Timestamp'])
+    
+    auto_bolus_timestamps = pd.to_datetime(data.loc[data['Automatic_Bolus'] > 0, 'Timestamp'])
+    user_bolus_timestamps = pd.to_datetime(data.loc[data['Manual_Bolus'] > 0, 'Timestamp'])
+    
+    # Calculate the minimum timestamp for time normalization
+    min_timestamp = timestamps.min()
+    
+    # Calculate time in hours from the earliest timestamp
+    time_in_hours = (timestamps - min_timestamp).dt.total_seconds() / 3600
+    auto_bolus_time_in_hours = (auto_bolus_timestamps - min_timestamp).dt.total_seconds() / 3600
+    user_bolus_time_in_hours = (user_bolus_timestamps - min_timestamp).dt.total_seconds() / 3600
+    
+    # Iterate over auto bolus times
+    for auto_time in auto_bolus_time_in_hours:
+        # Find any user bolus times within the specified tolerance
+        concurrent = user_bolus_time_in_hours[
+            (user_bolus_time_in_hours >= auto_time - tolerance) & 
+            (user_bolus_time_in_hours <= auto_time + tolerance)
+        ]
+        
+        # If there are concurrent user boluses, check glucose level near those times
+        if not concurrent.empty:
+            for user_time in concurrent:
+                # Find the glucose level near the auto_time (within tolerance)
+                closest_index = (abs(time_in_hours - auto_time)).idxmin()
+                
+                # Check if the closest_index is within valid range
+                if 0 <= closest_index < len(data['GLC']):
+                    glucose_level = data['GLC'].iloc[closest_index]
+                    
+                    # Only save the timestamp if the glucose level is above 10
+                    if glucose_level > 10:
+                        concurrent_timestamps.append(data['Timestamp'].iloc[closest_index])
+    
+    return concurrent_timestamps
+
+
 
 def detect_concurrent_boluses_daily(data, tolerance=15/60,return_categories=False):
     data = data.reset_index(drop=True)
@@ -580,9 +627,10 @@ def detect_concurrent_boluses_daily(data, tolerance=15/60,return_categories=Fals
     return concurrent_timestamps
 
 
-def plot_wrong_boluses(data):
-    data = categorize_time_of_day(data, 'Timestamp')
-    result = detect_concurrent_boluses_daily(data, return_categories=True)
+
+def plot_wrong_boluses(result):
+    # data = categorize_time_of_day(data, 'Timestamp')
+    # result = detect_concurrent_boluses_daily(data, return_categories=True)
                 
     # Create a DataFrame from the list
     result = pd.DataFrame(result, columns=['time_category'])
@@ -648,3 +696,39 @@ def plot_wrong_boluses(data):
     )
 
     return(histogram)
+
+
+def hypoglycemia_after_bolus_detection(data,return_categories=False):
+    concurrent_timestamps = []
+    tolerance=3
+    timestamps = pd.to_datetime(data['Timestamp'])
+    categorize_time_of_day(data)
+    bolus_timestamps = pd.to_datetime(data.loc[data['Manual_Bolus'] > 0, 'Timestamp'])
+    hypoglycemia_timestamps = pd.to_datetime(data.loc[(data['GLC'] < 3.9)&(data['GLC'] > 0), 'Timestamp'])
+
+    # Calculate time in hours from the earliest timestamp
+    min_timestamp = timestamps.min()
+    time_in_hours = (timestamps - min_timestamp).dt.total_seconds() / 3600
+    bolus_time_in_hours = (bolus_timestamps - min_timestamp).dt.total_seconds() / 3600
+    hypog_bolus_time_in_hours = (hypoglycemia_timestamps - min_timestamp).dt.total_seconds() / 3600
+        # Iterate over auto bolus times
+    for auto_time in bolus_time_in_hours:
+        # Find any user bolus times within the specified tolerance
+        concurrent = hypog_bolus_time_in_hours[(hypog_bolus_time_in_hours <= auto_time+tolerance) & 
+                                              (hypog_bolus_time_in_hours >= auto_time)]
+        if not concurrent.empty:
+            for user_time in concurrent:
+                # Find the glucose level near the auto_time (within tolerance)
+                closest_index = (abs(time_in_hours - auto_time)).idxmin()
+                glucose_level = data['GLC'].iloc[closest_index]
+                
+                # Only save the timestamp if the glucose level is above 10
+                if glucose_level > 10:
+                        if return_categories == False:
+                            concurrent_timestamps.append(data['Timestamp'].iloc[closest_index])
+                        else:
+                            concurrent_timestamps.append((data['time_category'].iloc[closest_index]))
+    
+    return concurrent_timestamps
+
+
