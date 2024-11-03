@@ -53,7 +53,7 @@ def load_dataframes(d_basal, d_bolus, d_glc):
 
 with st.sidebar:
     # st.markdown('**Vyberte cestu k .csv souboru**')
-    path = st.file_uploader("Vyberte CSV soubor", accept_multiple_files=True)
+    path = st.file_uploader("Vyberte CSV bolusu, bazálu a glykémie", accept_multiple_files=True)
     for uploaded_file in path:
         df_final_exists = False
         if uploaded_file.name.startswith('basal'):
@@ -107,7 +107,7 @@ if st.session_state.df_final_exists:
                 tooltip=[alt.Tooltip('P25:Q', title='25th Percentile'), alt.Tooltip('P75:Q', title='75th Percentile')]
             )
 
-            band2 = alt.Chart(df_means_glc).mark_area(opacity=0.2, color='#cce6ff').encode(
+            band2 = alt.Chart(df_means_glc).mark_area(opacity=0.2, color='#7aa1fa').encode(
                 x='MinutesOfDay:Q',
                 y='P10:Q',
                 y2='P90:Q',
@@ -144,7 +144,7 @@ if st.session_state.df_final_exists:
             )
 
             # Error band for the 10th to 90th percentiles
-            band2_s = alt.Chart(df_means_basal).mark_area(opacity=0.2, color='#cce5ff').encode(  # Lighter shade for the band
+            band2_s = alt.Chart(df_means_basal).mark_area(opacity=0.2, color='#7aa1fa').encode(  # Lighter shade for the band
                 x='MinutesOfDay:Q',
                 y='P10:Q',
                 y2='P90:Q',
