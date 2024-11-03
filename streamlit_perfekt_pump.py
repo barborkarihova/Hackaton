@@ -65,7 +65,7 @@ with st.sidebar:
         # print(uploaded_file)
 
     if st.button('Potvrdit', type='primary'):
-        with st.spinner('Načítání...'):
+        # with st.spinner('Načítání...'):
             if not basal_data.empty and not bolus_data.empty and not cgm_data.empty:
                 # with st.spinner('Probíhá zpracování...'):
                     st.session_state.df_final = load_dataframes(basal_data, bolus_data, cgm_data)
