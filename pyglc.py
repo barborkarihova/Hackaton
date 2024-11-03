@@ -398,13 +398,19 @@ def plot_day(df, date):
     
     if wrong_boluses:
         for ax in [ax1, ax2, ax3]:
-            for bolus in wrong_boluses:
-                ax.axvline(x=bolus, color='red', alpha=0.5, linestyle='--', linewidth=5)
+            for idx, bolus in enumerate(wrong_boluses):
+                if (ax == ax1) and (idx == 0):
+                    ax.axvline(x=bolus, color='red', alpha=0.5, linestyle='--', linewidth=5, label='Pozdní bolus')
+                else:
+                    ax.axvline(x=bolus, color='red', alpha=0.5, linestyle='--', linewidth=5)
 
     if hypoglycemia:
         for ax in [ax1, ax2, ax3]:
-            for hypo_time in hypoglycemia:
-                ax.axvline(x=hypo_time, color='blue', alpha=0.5, linestyle='--', linewidth=5)
+            for idx, hypo_time in enumerate(hypoglycemia):
+                if (ax == ax1) and (idx == 0):
+                    ax.axvline(x=hypo_time, color='blue', alpha=0.5, linestyle='--', linewidth=5, label='Bolus následovaný hypoglykémií')
+                else:
+                    ax.axvline(x=hypo_time, color='blue', alpha=0.5, linestyle='--', linewidth=5)
     
     # Plot GLC
     ax1.plot(time, glc, color='blue', label='GLC')
