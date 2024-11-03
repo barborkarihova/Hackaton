@@ -717,17 +717,15 @@ def hypoglycemia_after_bolus_detection(data,return_categories=False):
         concurrent = hypog_bolus_time_in_hours[(hypog_bolus_time_in_hours <= auto_time+tolerance) & 
                                               (hypog_bolus_time_in_hours >= auto_time)]
         if not concurrent.empty:
-            for user_time in concurrent:
+            # for user_time in concurrent:
                 # Find the glucose level near the auto_time (within tolerance)
                 closest_index = (abs(time_in_hours - auto_time)).idxmin()
-                glucose_level = data['GLC'].iloc[closest_index]
                 
                 # Only save the timestamp if the glucose level is above 10
-                if glucose_level > 10:
-                        if return_categories == False:
-                            concurrent_timestamps.append(data['Timestamp'].iloc[closest_index])
-                        else:
-                            concurrent_timestamps.append((data['time_category'].iloc[closest_index]))
+                if return_categories == False:
+                    concurrent_timestamps.append(data['Timestamp'].iloc[closest_index])
+                else:
+                    concurrent_timestamps.append((data['time_category'].iloc[closest_index]))
     
     return concurrent_timestamps
 
