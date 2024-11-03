@@ -426,7 +426,7 @@ def plot_day(df, date):
     # Plot Bolus
     ax2.plot(time, bolus_aut, color='red', label='Automatický bolus')
     ax2.plot(time, bolus_man, color='orange', label='Manuální bolus')
-    ax2.set_ylabel('Bolus [U]', fontsize=15)
+    ax2.set_ylabel('Bolus (U)', fontsize=15)
     ax2.legend(loc='upper left', fontsize=13)
     ax2.tick_params(axis='y', labelsize=14)
     # ax2.set_title('Bolus Insulin')
