@@ -5,9 +5,10 @@ from PIL import Image
 import numpy as np
 import io
 import pandas as pd
-import pyglc
+import pyglc_b as pyglc
 import altair as alt
 import datetime
+
 
 st.set_page_config(
     page_title="PerFEKTPump",
@@ -80,7 +81,7 @@ with st.sidebar:
                 st.session_state.df_final = load_dataframes(basal_data, bolus_data, cgm_data)
                 # st.session_state.df_final = pyglc.process_data(basal_data, bolus_data, cgm_data)
                 st.session_state.df_final_exists = True
-                st.session_state.selected_date = datetime.date(2024, 6, 19)
+                st.session_state.selected_date = datetime.date(2024, 6, 15)
     st.markdown("<span style='opacity: 0.7;'>Pro DEMO stikněte <em>Povrdit</em> naprázdno</span>", unsafe_allow_html=True)
 
 
@@ -90,88 +91,75 @@ if st.session_state.df_final_exists:
         with col[0]:
             st.subheader("Ambulantorní Glykemický Profil (AGP)")
             fig, df_means_glc  = pyglc.plot_mean(st.session_state.df_final, 'GLC')
-            st.pyplot(fig)
+            # st.pyplot(fig)
 
-            # df_means_glc['MinutesOfDay'] = pd.to_datetime(df_means_glc['MinutesOfDay']).dt.minute / 60
+            # Main line and bands for the plot
+            line = alt.Chart(df_means_glc).mark_line(color='blue').encode(
+                x=alt.X('MinutesOfDay:Q', title='t [Hodiny]'),
+                y=alt.Y('Mean:Q', title='Průměr GLC [mmol/l]'),
+                tooltip=[alt.Tooltip('Mean:Q', title='Průměr GLC')]
+            )
 
+            band = alt.Chart(df_means_glc).mark_area(opacity=0.6, color='#66b2ff').encode(
+                x='MinutesOfDay:Q',
+                y='P25:Q',
+                y2='P75:Q',
+                tooltip=[alt.Tooltip('P25:Q', title='25th Percentile'), alt.Tooltip('P75:Q', title='75th Percentile')]
+            )
 
+            band2 = alt.Chart(df_means_glc).mark_area(opacity=0.2, color='#cce6ff').encode(
+                x='MinutesOfDay:Q',
+                y='P10:Q',
+                y2='P90:Q',
+                tooltip=[alt.Tooltip('P10:Q', title='10th Percentile'), alt.Tooltip('P90:Q', title='90th Percentile')]
+            )
 
-            # line = alt.Chart(df_means_glc).mark_line(color='blue').encode(
-            #     x=alt.X('MinutesOfDay:Q', title='t [Hodiny]'),
-            #     y=alt.Y('Mean:Q', title='Průměr GLC [mmol/l]'),
-            #     tooltip=[alt.Tooltip('Mean:Q', title='Průměr GLC')]
-            # ).properties(
-            #     title="Průměr GLC [mmol/l]"
-            # )
+            chart = alt.layer(band2, band, line).properties(
+                width=600,
+                height=450
+            )
 
-            # # Error band for the 25th to 75th percentiles
-            # band = alt.Chart(df_means_glc).mark_area(opacity=0.6, color='#66b2ff').encode(
-            #     x='MinutesOfDay:Q',
-            #     y='P25:Q',
-            #     y2='P75:Q',
-            #     tooltip=[alt.Tooltip('P25:Q', title='25th Percentile'), alt.Tooltip('P75:Q', title='75th Percentile')]
-            # )
-
-            # # Error band for the 10th to 90th percentiles
-            # band2 = alt.Chart(df_means_glc).mark_area(opacity=0.2, color='#cce6ff').encode(
-            #     x='MinutesOfDay:Q',
-            #     y='P10:Q',
-            #     y2='P90:Q',
-            #     tooltip=[alt.Tooltip('P10:Q', title='10th Percentile'), alt.Tooltip('P90:Q', title='90th Percentile')]
-            # )
-
-            # # Layer the main chart components without the legend
-            # chart = alt.layer(band2, band, line).properties(
-            #     width=600,
-            #     height=450
-            # )
-
-            # # Display the chart in Streamlit
-            # st.altair_chart(chart, use_container_width=True)
-
-
-
+            # Display the chart in Streamlit
+            st.altair_chart(chart, use_container_width=True)
 
             st.subheader("Profil bazálního podání inzulinu")
             # st.markdown(st.session_state.df_final.head())
             fig, df_means_basal = pyglc.plot_mean(st.session_state.df_final, 'Basal_Rate')
-            st.pyplot(fig)   
+            # st.pyplot(fig)   
 
 
-            # line_s = alt.Chart(df_means_basal).mark_line(color='blue').encode(
-            #     x=alt.X('MinutesOfDay:Q', title='t [Hodiny]'),
-            #     y=alt.Y('Mean:Q', title='Průměr bazálu inzulinu'),
-            #     tooltip=[alt.Tooltip('Mean:Q', title='Průměr bazálu inzulinu')]
-            # ).properties(
-            #     title="Průměr bazálu inzulinu"
-            # )
+            # Second plot
+            line_s = alt.Chart(df_means_basal).mark_line(color='blue').encode(  # Light blue for the line
+                x=alt.X('MinutesOfDay:Q', title='t [Hodiny]'),
+                y=alt.Y('Mean:Q', title='Průměr bazálu inzulinu'),
+                tooltip=[alt.Tooltip('Mean:Q')]
+            ) 
 
-            # # Error band for the 25th to 75th percentiles
-            # band_s = alt.Chart(df_means_glc).mark_area(opacity=0.6, color='#66b2ff').encode(
-            #     x='MinutesOfDay:Q',
-            #     y='P25:Q',
-            #     y2='P75:Q',
-            #     tooltip=[alt.Tooltip('P25:Q', title='25th Percentile'), alt.Tooltip('P75:Q', title='75th Percentile')]
-            # )
+            # Error band for the 25th to 75th percentiles
+            band_s = alt.Chart(df_means_basal).mark_area(opacity=0.6, color='#66b3ff').encode(  # Different shade for the band
+                x='MinutesOfDay:Q',
+                y='P25:Q',
+                y2='P75:Q',
+                tooltip=[alt.Tooltip('P25:Q', title='25th Percentile'), alt.Tooltip('P75:Q', title='75th Percentile')]
+            )
 
-            # # Error band for the 10th to 90th percentiles
-            # band2_s = alt.Chart(df_means_glc).mark_area(opacity=0.2, color='#cce6ff').encode(
-            #     x='MinutesOfDay:Q',
-            #     y='P10:Q',
-            #     y2='P90:Q',
-            #     tooltip=[alt.Tooltip('P10:Q', title='10th Percentile'), alt.Tooltip('P90:Q', title='90th Percentile')]
-            # )
+            # Error band for the 10th to 90th percentiles
+            band2_s = alt.Chart(df_means_basal).mark_area(opacity=0.2, color='#cce5ff').encode(  # Lighter shade for the band
+                x='MinutesOfDay:Q',
+                y='P10:Q',
+                y2='P90:Q',
+                tooltip=[alt.Tooltip('P10:Q', title='10th Percentile'), alt.Tooltip('P90:Q', title='90th Percentile')]
+            )
 
-            # # Layer the main chart components without the legend
-            # chart = alt.layer(band2_s, band_s, line_s).properties(
-            #     width=600,
-            #     height=450
-            # )
+            # Layer the main chart components without the legend
+            chart2 = alt.layer(band2_s, band_s, line_s).properties(
+                width=600,
+                height=450,
+                # title="Průměr bazálu inzulinu"
+            )
 
-            # # Display the chart in Streamlit
-            # st.altair_chart(chart, use_container_width=True)
-
-
+            # Display the second chart in Streamlit  
+            st.altair_chart(chart2, use_container_width=True)
 
             # st.markdown(df_means_glc['MinutesOfDay']) 
 
@@ -193,29 +181,6 @@ if st.session_state.df_final_exists:
             selected_date = pd.Timestamp(st.session_state.selected_date).date()  # Use the updated session state
             fig = pyglc.plot_day(st.session_state.df_final, selected_date)
             st.pyplot(fig) 
-
-
-
-
-            # # Define the line chart for the mean
-            # line = alt.Chart(df_means_glc).mark_line(color='blue').encode(
-            #     x=alt.X('Timestamp:T', title='Time'),
-            #     y=alt.Y('mean:Q', title='Value')
-            # )
-
-            # # Define the error band for the 25th and 75th percentiles
-            # band = alt.Chart(df_means_glc).mark_area(opacity=0.3).encode(
-            #     x='Timestamp:T',
-            #     y='p25:Q',
-            #     y2='p75:Q'
-            # )
-
-            # # Combine the line and band charts
-            # chart = band + line
-
-            # # Display the chart in Streamlit
-            # st.altair_chart(chart, use_container_width=True)
-
 
    
         with col[1]:
@@ -246,9 +211,6 @@ if st.session_state.df_final_exists:
             bins = [i for i in range(1, 13)]  # Create bins: [0, 2, 4, ..., 24]
             labels = [f"{i}-{i+2}" for i in range(0, 23, 2)]  # Create labels: ['0-2', '2-4', ..., '22-24']
 
-
-
-
             st.subheader("Procentuální rozložení podání inzulinového bolusu pacientem a pumpou")
             df_combined = pyglc.get_auto_user_ratio(st.session_state.df_final)
             chart = pyglc.plot_insulin_statistics(df_combined, 'Auto_Rate_Percent', 'User_Rate', 'Automaticky', 'Manuálně')
@@ -265,9 +227,5 @@ if st.session_state.df_final_exists:
             st.table(combined_means)
 
 
-
-
-
 else:
     st.markdown('**Není co zobrazit**')   
-    

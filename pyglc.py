@@ -6,6 +6,7 @@ import os
 import time
 import seaborn as sns
 
+
 def calculate_mean_by_categories(df, value_columns, mean_column_name='Mean_Value'):
     
     df['Timestamp'] = pd.to_datetime(df['Timestamp'])
@@ -24,19 +25,6 @@ def calculate_mean_by_categories(df, value_columns, mean_column_name='Mean_Value
     mean_values = mean_values.rename(columns={'day_total': mean_column_name})
     
     return mean_values
-# class Data:
-#     def __init__(self, df, info):
-#         self.data = df
-#         self.info = info
-
-#     def time_transform(self):
-#         self.data['Timestamp'] = pd.to_datetime(self.data['Timestamp'], format='%Y-%m-%d %H:%M')
-#         self.data = self.data.sort_values(by='Timestamp').reset_index(drop=True)
-
-#     # def split_days(self):
-#     #     self.days = {}
-#     #     for day in self.data['Timestamp'].dt.date.unique():
-#     #         self.days[day] = self.data[self.data['Timestamp'].dt.date == day]
 
 
 def time_transform(df):
@@ -71,69 +59,6 @@ def split_bolus(df):
 def glc_cap(df, col, limit):
     df.loc[df[col] > limit, col] = limit
 
-
-import pandas as pd
-
-# def time_stand(basal, bolus, glc):
-#     start = min(basal['Timestamp'].iloc[0], bolus['Timestamp'].iloc[0], glc['Timestamp'].iloc[0])
-#     end = max(basal['Timestamp'].iloc[-1], bolus['Timestamp'].iloc[-1], glc['Timestamp'].iloc[-1])
-    
-#     timestamps = pd.date_range(start=start, end=end, freq='min')
-#     df_final = pd.DataFrame({'Timestamp': timestamps})
-#     df_final['Bolus'] = 0.0
-#     df_final['Manual_Bolus'] = 0.0
-#     df_final['Automatic_Bolus'] = 0.0
-#     df_final['Basal_Rate'] = 0.0
-#     df_final['GLC'] = 0.0
-
-#     # Aggregate basal rates and durations by timestamp to handle duplicates
-#     basal_grouped = basal.groupby('Timestamp').agg({
-#         'Rate': 'mean',  # or 'sum' based on your needs
-#         'Duration (minutes)': 'mean'  # or 'sum'
-#     }).reset_index()
-#     basal_rate_map = {row['Timestamp']: row['Rate'] / 60 for _, row in basal_grouped.iterrows()}
-#     basal_duration_map = {row['Timestamp']: row['Duration (minutes)'] for _, row in basal_grouped.iterrows()}
-
-#     # Aggregate bolus by timestamp to handle duplicates
-#     bolus_grouped = bolus.groupby('Timestamp').agg({
-#         'Insulin Delivered (U)': 'sum',
-#         'Manual': 'sum',
-#         'Automatic': 'sum'
-#     }).reset_index()
-#     bolus_map = bolus_grouped.set_index('Timestamp')[['Insulin Delivered (U)', 'Manual', 'Automatic']].to_dict('index')
-
-#     # Aggregate glucose values by timestamp to handle duplicates
-#     glc_grouped = glc.groupby('Timestamp').agg({'CGM Glucose Value (mmol/l)': 'mean'}).reset_index()
-#     glc_map = glc_grouped.set_index('Timestamp')['CGM Glucose Value (mmol/l)'].to_dict()
-
-#     # Initialize tracking variables
-#     basal_rate_prev = 0
-#     basal_duration = 0
-#     glc_prev = 0
-#     glc_duration = 5
-
-#     # Process each timestamp
-#     for idx, timestamp in enumerate(df_final['Timestamp']):
-#         if timestamp in basal_rate_map:
-#             basal_rate_prev = basal_rate_map[timestamp]
-#             basal_duration = basal_duration_map[timestamp]
-#         if basal_duration > 0:
-#             df_final.at[idx, 'Basal_Rate'] = basal_rate_prev
-#             basal_duration -= 1
-
-#         if timestamp in bolus_map:
-#             df_final.at[idx, 'Bolus'] = bolus_map[timestamp]['Insulin Delivered (U)']
-#             df_final.at[idx, 'Manual_Bolus'] = bolus_map[timestamp]['Manual']
-#             df_final.at[idx, 'Automatic_Bolus'] = bolus_map[timestamp]['Automatic']
-
-#         if timestamp in glc_map:
-#             glc_prev = glc_map[timestamp]
-#             glc_duration = 5
-#         if glc_duration > 0:
-#             df_final.at[idx, 'GLC'] = glc_prev
-#             glc_duration -= 1
-
-#     return df_final
 
 def time_stand(basal, bolus, glc):
     start = min(basal['Timestamp'].iloc[0], bolus['Timestamp'].iloc[0], glc['Timestamp'].iloc[0])
@@ -195,38 +120,6 @@ def time_stand(basal, bolus, glc):
             glc_duration -= 1
 
     return df_final
-
-# def process_data(basal_dir, bolus_dir, glc_dir):
-#     # Read files into dframes dictionary
-#     dframes = {}
-
-#     with open(basal_dir, 'r') as f:
-#         df_info = f.readline().strip()
-#     dframes['basal'] = Data(pd.read_csv(basal_dir, skiprows=1), df_info)
-#     dframes['basal'].data.drop(columns=['Percentage (%)', 'Insulin Delivered (U)', 'Serial Number'], inplace=True)
-
-#     with open(bolus_dir, 'r') as f:
-#         df_info = f.readline().strip()
-#     dframes['bolus'] = Data(pd.read_csv(bolus_dir, skiprows=1), df_info)
-#     dframes['bolus'].data.drop(columns=['Insulin Type', 'Initial Delivery (U)', 'Extended Delivery (U)', 'Serial Number'], inplace=True)
-
-#     with open(glc_dir, 'r') as f:
-#         df_info = f.readline().strip()
-#     dframes['glc'] = Data(pd.read_csv(glc_dir, skiprows=1), df_info)
-#     dframes['glc'].data.drop(columns=['Serial Number'], inplace=True)
-#     glc_cap(dframes['glc'].data, 'CGM Glucose Value (mmol/l)', 22)
-
-#     # Transform time columns to datetime objects and sort by timestamp
-#     for key in dframes.keys():
-#         dframes[key].time_transform()
-
-#     split_bolus(dframes['bolus'].data)
-
-#     dframes['basal'].data = time_standardize_basal(dframes['basal'].data)
-
-#     df_final = time_stand(dframes['basal'].data, dframes['bolus'].data, dframes['glc'].data)
-
-#     return df_final
 
 
 def process_data(basal_df, bolus_df, glc_df):
@@ -488,6 +381,10 @@ def plot_day(df, date):
     wrong_boluses = detect_concurrent_boluses_daily(day_df)
     wrong_boluses = [ts.hour + ts.minute / 60 for ts in pd.to_datetime(wrong_boluses)]
 
+    hypoglycemia = hypoglycemia_after_bolus_detection(day_df)
+    hypoglycemia = [ts.hour + ts.minute / 60 for ts in pd.to_datetime(hypoglycemia)]
+    # st.markdown(hypoglycemia)
+
     time = day_df['Timestamp'].dt.hour + (day_df['Timestamp'].dt.minute)/60
     basal = day_df['Basal_Rate']
     bolus_aut = day_df['Automatic_Bolus']
@@ -497,11 +394,17 @@ def plot_day(df, date):
     # Create a figure and axes for the plots
     fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, ncols=1, figsize=(12, 8), sharex=True)
     length = len(time)
-    boundaries = np.tile([4.7, 7.2, 10], (length, 1)).T
+    boundaries = np.tile([3.9, 7.2, 10], (length, 1)).T
     
     if wrong_boluses:
         for ax in [ax1, ax2, ax3]:
-            ax.axvline(x=wrong_boluses, color='red', alpha=0.5, linestyle='--', linewidth=5)
+            for bolus in wrong_boluses:
+                ax.axvline(x=bolus, color='red', alpha=0.5, linestyle='--', linewidth=5)
+
+    if hypoglycemia:
+        for ax in [ax1, ax2, ax3]:
+            for hypo_time in hypoglycemia:
+                ax.axvline(x=hypo_time, color='blue', alpha=0.5, linestyle='--', linewidth=5)
     
     # Plot GLC
     ax1.plot(time, glc, color='blue', label='GLC')
@@ -540,47 +443,6 @@ def plot_day(df, date):
     # Show the plots
     # plt.show()
     return plt.gcf()
-
-def detect_concurrent_boluses_daily(data, tolerance=15/60):
-    data = data.reset_index(drop=True)
-    concurrent_timestamps = []
-    timestamps = pd.to_datetime(data['Timestamp'])
-    
-    auto_bolus_timestamps = pd.to_datetime(data.loc[data['Automatic_Bolus'] > 0, 'Timestamp'])
-    user_bolus_timestamps = pd.to_datetime(data.loc[data['Manual_Bolus'] > 0, 'Timestamp'])
-    
-    # Calculate the minimum timestamp for time normalization
-    min_timestamp = timestamps.min()
-    
-    # Calculate time in hours from the earliest timestamp
-    time_in_hours = (timestamps - min_timestamp).dt.total_seconds() / 3600
-    auto_bolus_time_in_hours = (auto_bolus_timestamps - min_timestamp).dt.total_seconds() / 3600
-    user_bolus_time_in_hours = (user_bolus_timestamps - min_timestamp).dt.total_seconds() / 3600
-    
-    # Iterate over auto bolus times
-    for auto_time in auto_bolus_time_in_hours:
-        # Find any user bolus times within the specified tolerance
-        concurrent = user_bolus_time_in_hours[
-            (user_bolus_time_in_hours >= auto_time - tolerance) & 
-            (user_bolus_time_in_hours <= auto_time + tolerance)
-        ]
-        
-        # If there are concurrent user boluses, check glucose level near those times
-        if not concurrent.empty:
-            for user_time in concurrent:
-                # Find the glucose level near the auto_time (within tolerance)
-                closest_index = (abs(time_in_hours - auto_time)).idxmin()
-                
-                # Check if the closest_index is within valid range
-                if 0 <= closest_index < len(data['GLC']):
-                    glucose_level = data['GLC'].iloc[closest_index]
-                    
-                    # Only save the timestamp if the glucose level is above 10
-                    if glucose_level > 10:
-                        concurrent_timestamps.append(data['Timestamp'].iloc[closest_index])
-    
-    return concurrent_timestamps
-
 
 
 def detect_concurrent_boluses_daily(data, tolerance=15/60,return_categories=False):
@@ -692,13 +554,14 @@ def plot_wrong_boluses(result):
     ).properties(
         # title='Histogram of Time Ranges (Including Zero Counts)',
         width=600,
-        height=250
+        height=200
     )
 
     return(histogram)
 
 
 def hypoglycemia_after_bolus_detection(data,return_categories=False):
+    data.reset_index(drop=True, inplace=True)
     concurrent_timestamps = []
     tolerance=3
     timestamps = pd.to_datetime(data['Timestamp'])
@@ -720,7 +583,9 @@ def hypoglycemia_after_bolus_detection(data,return_categories=False):
             # for user_time in concurrent:
                 # Find the glucose level near the auto_time (within tolerance)
                 closest_index = (abs(time_in_hours - auto_time)).idxmin()
-                
+                # st.markdown(f'closest index: {closest_index}')
+                # st.markdown(f'len: {len(data["GLC"])}')
+                # if 0 <= closest_index < len(data['GLC']):
                 # Only save the timestamp if the glucose level is above 10
                 if return_categories == False:
                     concurrent_timestamps.append(data['Timestamp'].iloc[closest_index])
