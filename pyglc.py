@@ -14,7 +14,7 @@ def calculate_mean_by_categories(df, value_columns, mean_column_name='Mean_Value
     
     # Group by 'time_category' and 'day', summing each column in 'value_columns' separately
     daily_sums = df.groupby(['time_category', 'day'])[value_columns].sum().reset_index()
-    
+
     # Sum the columns together for each day
     daily_sums['day_total'] = daily_sums[value_columns].sum(axis=1)
     
@@ -240,7 +240,7 @@ def plot_basal_bolus_ratio(data):
     ax.set_xticklabels(df_combined['time_category'] * 2-2)
 
     # Labeling and formatting
-    ax.set_xlabel('Čas (h)')
+    ax.set_xlabel('Denní doba (h)')
     ax.set_ylabel('Procenta (%)')
     # ax.set_title('P')
     ax.legend()
@@ -270,7 +270,7 @@ def plot_user_auto_bolus_ratio(data):
     ax.set_xticklabels(df_combined['time_category'] * 2-2)
 
     # Labeling and formatting
-    ax.set_xlabel('Čas (h)')
+    ax.set_xlabel('Denní doba (h)')
     ax.set_ylabel('Procenta (%)')
     # ax.set_title('P')
     ax.legend()
@@ -360,7 +360,7 @@ def plot_insulin_statistics(df_combined, first_category_name, second_category_na
 
             # Create the Altair chart with ordered x-axis
             chart = alt.Chart(df_melted).mark_bar().encode(
-                x=alt.X('time_range:O', title='Čas (h)', sort=ordered_categories),  # Explicit sorting
+                x=alt.X('time_range:O', title='Denní doba (h)', sort=ordered_categories),  # Explicit sorting
                 y=alt.Y('Percentage:Q', title='Procenta (%)', stack='zero'),
                 color=alt.Color('Rate_Type:N', title='Typ Inzulinu', 
                 legend=alt.Legend(orient='top')),
@@ -426,7 +426,7 @@ def plot_day(df, date):
     # Plot Bolus
     ax2.plot(time, bolus_aut, color='red', label='Automatický bolus')
     ax2.plot(time, bolus_man, color='orange', label='Manuální bolus')
-    ax2.set_ylabel('Bolus', fontsize=15)
+    ax2.set_ylabel('Bolus [U]', fontsize=15)
     ax2.legend(loc='upper left', fontsize=13)
     ax2.tick_params(axis='y', labelsize=14)
     # ax2.set_title('Bolus Insulin')

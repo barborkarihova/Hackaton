@@ -133,7 +133,7 @@ if st.session_state.df_final_exists:
             # Second plot
             line_s = alt.Chart(df_means_basal).mark_line(color='blue').encode(  # Light blue for the line
                 x=alt.X('MinutesOfDay:Q', title='t [Hodiny]'),
-                y=alt.Y('Mean:Q', title='Průměr bazálu inzulinu'),
+                y=alt.Y('Mean:Q', title='Průměr bazálu inzulinu [U/min]'),
                 tooltip=[alt.Tooltip('Mean:Q')]
             ) 
 
