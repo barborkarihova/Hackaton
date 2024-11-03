@@ -36,7 +36,7 @@ if 'selected_date' not in st.session_state:
 if 'demo_dir' not in st.session_state:
     st.session_state.demo_dir = "demo_files/"
 
-st.cache_data.clear_cache()
+st.cache_data.clear()
 
 def categorize_time_of_day(df, timestamp_column='Timestamp'):
     # Ensure the timestamp column is in datetime format
