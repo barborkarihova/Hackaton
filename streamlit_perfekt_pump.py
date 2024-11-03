@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 import io
 import pandas as pd
-import pyglc_b as pyglc
+import pyglc
 import altair as alt
 import datetime
 
