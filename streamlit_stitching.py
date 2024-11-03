@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(
     page_title="PerFEKTPump",
-    page_icon="🏂",
+    page_icon="💉",
     layout="wide",
     initial_sidebar_state="expanded")
 
@@ -143,7 +143,7 @@ if st.session_state.df_final_exists:
             st.altair_chart(histogram, use_container_width=True)
 
             st.caption("**Injekce bolusu max. 2h před nástupem hypoglykémie**")
-            result = pyglc.hypoglycemia_after_bolus_detection(data)
+            result = pyglc.hypoglycemia_after_bolus_detection(data, return_categories=True)
             histogram = pyglc.plot_wrong_boluses(result)
             st.altair_chart(histogram, use_container_width=True)
         
