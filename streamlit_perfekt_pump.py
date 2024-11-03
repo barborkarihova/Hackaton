@@ -196,7 +196,8 @@ if st.session_state.df_final_exists:
             histogram = pyglc.plot_wrong_boluses(result)
             st.altair_chart(histogram, use_container_width=True)
         
-            st.subheader("Procentuální rozložení bazálního a bolusového inzulínu")
+            st.subheader("Procentuální rozložení")
+            st.caption("**Bazálního a bolusového inzulínu**")
             df_combined = pyglc.get_basal_bolus_ratio(st.session_state.df_final)
             chart = pyglc.plot_insulin_statistics(df_combined, 'Basal_Rate_Percent', 'Total_Bolus_Percent', 'Bazál', 'Bolus')
             st.altair_chart(chart, use_container_width=True)
@@ -211,7 +212,8 @@ if st.session_state.df_final_exists:
             bins = [i for i in range(1, 13)]  # Create bins: [0, 2, 4, ..., 24]
             labels = [f"{i}-{i+2}" for i in range(0, 23, 2)]  # Create labels: ['0-2', '2-4', ..., '22-24']
 
-            st.subheader("Procentuální rozložení podání inzulinového bolusu pacientem a pumpou")
+
+            st.caption("**Podání inzulinového bolusu pacientem a pumpou**")
             df_combined = pyglc.get_auto_user_ratio(st.session_state.df_final)
             chart = pyglc.plot_insulin_statistics(df_combined, 'Auto_Rate_Percent', 'User_Rate', 'Automaticky', 'Manuálně')
             st.altair_chart(chart, use_container_width=True)
