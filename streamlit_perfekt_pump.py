@@ -65,23 +65,24 @@ with st.sidebar:
         # print(uploaded_file)
 
     if st.button('Potvrdit', type='primary'):
-        if not basal_data.empty and not bolus_data.empty and not cgm_data.empty:
-            # with st.spinner('Probíhá zpracování...'):
-                st.session_state.df_final = load_dataframes(basal_data, bolus_data, cgm_data)
-                # st.session_state.df_final = pyglc.process_data(basal_data, bolus_data, cgm_data)
-                st.session_state.df_final_exists = True
-                # st.markdown(st.session_state.df_final.head())
-        # df_final = pyglc.process_data(basal_data, bolus_data, cgm_data)
-        else:
-            # st.markdown('**Nedostatečná data**')
-            # with st.spinner('Probíhá zpracování...'):
-                basal_data = pd.read_csv(st.session_state.demo_dir + 'basal_data.csv', skiprows=1)
-                bolus_data = pd.read_csv(st.session_state.demo_dir + 'bolus_data.csv', skiprows=1)
-                cgm_data = pd.read_csv(st.session_state.demo_dir + 'cgm_data.csv', skiprows=1)
-                st.session_state.df_final = load_dataframes(basal_data, bolus_data, cgm_data)
-                # st.session_state.df_final = pyglc.process_data(basal_data, bolus_data, cgm_data)
-                st.session_state.df_final_exists = True
-                st.session_state.selected_date = datetime.date(2024, 6, 15)
+        with st.spinner('Načítání...'):
+            if not basal_data.empty and not bolus_data.empty and not cgm_data.empty:
+                # with st.spinner('Probíhá zpracování...'):
+                    st.session_state.df_final = load_dataframes(basal_data, bolus_data, cgm_data)
+                    # st.session_state.df_final = pyglc.process_data(basal_data, bolus_data, cgm_data)
+                    st.session_state.df_final_exists = True
+                    # st.markdown(st.session_state.df_final.head())
+            # df_final = pyglc.process_data(basal_data, bolus_data, cgm_data)
+            else:
+                # st.markdown('**Nedostatečná data**')
+                # with st.spinner('Probíhá zpracování...'):
+                    basal_data = pd.read_csv(st.session_state.demo_dir + 'basal_data.csv', skiprows=1)
+                    bolus_data = pd.read_csv(st.session_state.demo_dir + 'bolus_data.csv', skiprows=1)
+                    cgm_data = pd.read_csv(st.session_state.demo_dir + 'cgm_data.csv', skiprows=1)
+                    st.session_state.df_final = load_dataframes(basal_data, bolus_data, cgm_data)
+                    # st.session_state.df_final = pyglc.process_data(basal_data, bolus_data, cgm_data)
+                    st.session_state.df_final_exists = True
+                    st.session_state.selected_date = datetime.date(2024, 6, 15)
     st.markdown("<span style='opacity: 0.7;'>Pro DEMO stikněte <em>Povrdit</em> naprázdno</span>", unsafe_allow_html=True)
 
 
